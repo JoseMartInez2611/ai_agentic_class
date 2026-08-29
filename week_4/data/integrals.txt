@@ -1,0 +1,25 @@
+Integrals
+
+An antiderivative of a function f is a function F such that F'(x) = f(x). The indefinite
+integral of f, written as the integral of f(x) dx, represents the entire family of
+antiderivatives of f, and always includes an arbitrary constant of integration, "+ C",
+because two antiderivatives of the same function can only differ by a constant.
+
+The definite integral of f(x) from a to b, written as the integral of f(x) dx from a to
+b, represents the signed area between the curve y = f(x) and the x-axis over the
+interval [a, b]. Area above the x-axis counts as positive, and area below counts as
+negative.
+
+The Fundamental Theorem of Calculus connects derivatives and integrals: it states that if
+F is an antiderivative of f, then the definite integral of f(x) dx from a to b equals
+F(b) - F(a). This is what makes it possible to evaluate definite integrals directly from
+an antiderivative instead of computing an area numerically.
+
+Common integration techniques include substitution (reversing the chain rule, useful when
+the integrand contains a function and its derivative), integration by parts (reversing
+the product rule, useful for products like x*e^x), and partial fraction decomposition
+(useful for rational functions before integrating each simpler term separately).
+
+Definite integrals also have practical applications beyond area: they can compute the
+volume of a solid of revolution, the total displacement of an object from its velocity
+function, and the average value of a function over an interval.

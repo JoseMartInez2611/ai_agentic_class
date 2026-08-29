@@ -1,0 +1,20 @@
+Limits
+
+The limit of a function f(x) as x approaches a value c describes the value f(x) gets
+close to as x gets arbitrarily close to c, without necessarily ever reaching c. We write
+this as lim(x->c) f(x) = L.
+
+A one-sided limit only considers values approaching from one direction. The left-hand
+limit, written lim(x->c-) f(x), looks at values of x less than c. The right-hand limit,
+written lim(x->c+) f(x), looks at values of x greater than c. The two-sided limit exists
+only if both one-sided limits exist and are equal.
+
+A function f is continuous at a point c if three conditions hold: f(c) is defined, the
+limit of f(x) as x approaches c exists, and that limit equals f(c). Many limits of
+indeterminate form 0/0 or infinity/infinity can be resolved with L'Hopital's Rule, which
+states that if lim(x->c) f(x)/g(x) is of indeterminate form, then it equals
+lim(x->c) f'(x)/g'(x), provided that second limit exists.
+
+Common techniques for evaluating limits include direct substitution when the function is
+continuous at that point, factoring and cancelling common terms to remove a 0/0 form, and
+rationalizing the numerator or denominator when square roots are involved.

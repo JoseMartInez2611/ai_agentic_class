@@ -1,0 +1,22 @@
+Derivatives
+
+The derivative of a function f at a point x measures the instantaneous rate of change of
+f with respect to x, and is defined as the limit f'(x) = lim(h->0) [f(x+h) - f(x)] / h.
+Geometrically, f'(x) is the slope of the tangent line to the graph of f at that point.
+
+The power rule states that if f(x) = x^n, then f'(x) = n*x^(n-1). The constant multiple
+rule says the derivative of c*f(x) is c*f'(x), and the sum rule says the derivative of
+f(x) + g(x) is f'(x) + g'(x).
+
+The product rule is used when differentiating a product of two functions: if
+f(x) = u(x)*v(x), then f'(x) = u'(x)*v(x) + u(x)*v'(x). The quotient rule handles a
+ratio of two functions: if f(x) = u(x)/v(x), then
+f'(x) = [u'(x)*v(x) - u(x)*v'(x)] / [v(x)]^2.
+
+The chain rule is used for composite functions: if f(x) = g(h(x)), then
+f'(x) = g'(h(x)) * h'(x). This is the rule most students find hardest at first, because
+it requires correctly identifying the "outer" and "inner" functions before applying it.
+
+A function that is differentiable at a point must also be continuous there, but the
+converse is not true: a function can be continuous at a point without being
+differentiable there, as with a sharp corner like f(x) = |x| at x = 0.

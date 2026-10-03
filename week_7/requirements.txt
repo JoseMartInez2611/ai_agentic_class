@@ -1,0 +1,2 @@
+langgraph>=0.6
+langchain-google-genai>=2.0

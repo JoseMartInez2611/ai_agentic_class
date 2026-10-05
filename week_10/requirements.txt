@@ -1,0 +1,4 @@
+langgraph>=0.6
+langchain-google-genai>=2.0
+google-genai>=1.0
+chromadb>=0.5

@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week 10: LangGraph II + Advanced RAG &middot; Activities | AI Agentic Engineering</title>
+<style>
+:root{
+  --bg:#f4f8fd;
+  --bg-elevated:#ffffff;
+  --text:#0a2540;
+  --text-muted:#4c6076;
+  --primary:#0352a6;
+  --primary-dark:#023262;
+  --primary-light:#e3edfb;
+  --accent:#7a5800;
+  --accent-light:#fff6d6;
+  --accent-solid:#ffd100;
+  --border:#d7e3f5;
+  --code-bg:#0a2540;
+  --code-text:#e7eef8;
+  --warn:#b45309;
+  --warn-light:#fef3e2;
+  --success:#15803d;
+  --success-light:#eafaf0;
+  --danger:#b91c1c;
+  --danger-light:#fdecec;
+  --radius:12px;
+  --max-w:840px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0a1929;
+    --bg-elevated:#0f2540;
+    --text:#eef3fa;
+    --text-muted:#a9bbd6;
+    --primary:#5b9ce6;
+    --primary-dark:#8ec0f5;
+    --primary-light:#173259;
+    --accent:#ffd100;
+    --accent-light:#3a2f00;
+    --accent-solid:#ffd100;
+    --border:#1f3a5f;
+    --code-bg:#081422;
+    --code-text:#e7eef8;
+    --warn:#fbbf24;
+    --warn-light:#332707;
+    --success:#4ade80;
+    --success-light:#0d2417;
+    --danger:#f87171;
+    --danger-light:#2e1414;
+    color-scheme: dark;
+  }
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+}
+a{color:var(--primary);}
+a:hover{color:var(--primary-dark);}
+img{max-width:100%;}
+code{font-family:"SF Mono",Consolas,Menlo,monospace;}
+
+/* ---- Top header ---- */
+.site-header{
+  position:sticky; top:0; z-index:50;
+  background:var(--bg-elevated);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 2px 0 0 var(--accent-solid);
+}
+.site-header .band{
+  max-width:1200px; margin:0 auto; padding:.6rem 1.25rem;
+}
+.brand-row{
+  display:flex; align-items:baseline; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+}
+.brand{
+  font-weight:700; font-size:1.05rem; letter-spacing:.2px;
+}
+.brand small{
+  display:block; font-weight:400; color:var(--text-muted); font-size:.78rem; margin-top:2px;
+}
+.view-toggle{
+  display:flex; gap:.4rem; font-size:.82rem;
+}
+.view-toggle a{
+  padding:.3rem .7rem; border-radius:999px; border:1px solid var(--border);
+  text-decoration:none; color:var(--text-muted);
+}
+.view-toggle a.active{
+  background:var(--primary); border-color:var(--primary); color:#fff; font-weight:600;
+}
+.nav-stepper{
+  display:flex; align-items:stretch; gap:.5rem; margin-top:.6rem; flex-wrap:wrap;
+}
+.step{
+  flex:1 1 220px; min-width:0;
+  border:1px solid var(--border); border-radius:var(--radius);
+  padding:.5rem .75rem; font-size:.82rem; text-decoration:none; color:var(--text);
+  display:flex; flex-direction:column; gap:.1rem;
+  background:var(--bg-elevated);
+}
+.step .tag{
+  font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); font-weight:700;
+}
+.step .label{ font-weight:600; }
+.step.prev:hover{ border-color:var(--primary); }
+.step.current{
+  background:var(--primary-light); border-color:var(--primary);
+  box-shadow:inset 0 -3px 0 0 var(--accent-solid);
+}
+.step.current .tag{ color:var(--primary); }
+.step.disabled{
+  opacity:.55; cursor:default;
+}
+.step.next:hover{ border-color:var(--accent); }
+
+/* ---- Layout ---- */
+.layout{
+  max-width:1200px; margin:0 auto; padding:1.5rem 1.25rem 4rem;
+  display:grid; grid-template-columns:230px minmax(0,1fr); gap:2.5rem;
+  align-items:start;
+}
+@media (max-width:900px){
+  .layout{ grid-template-columns:1fr; }
+  .sidebar{ position:static; order:2; }
+}
+.sidebar{
+  position:sticky; top:5.7rem; align-self:start;
+  max-height:calc(100vh - 6.5rem); overflow-y:auto;
+  font-size:.85rem;
+}
+.sidebar h2{
+  font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted);
+  margin:0 0 .5rem;
+}
+.sidebar ul{ list-style:none; margin:0 0 1.5rem; padding:0; }
+.sidebar li{ margin:0; }
+.sidebar li.toc-sub{ margin-left:.9rem; }
+.sidebar a{
+  display:block; padding:.28rem 0; text-decoration:none; color:var(--text-muted); border-left:2px solid transparent; padding-left:.6rem;
+}
+.sidebar a:hover{ color:var(--primary); border-left-color:var(--primary); }
+.sidebar .box{
+  background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius);
+  padding:.85rem .9rem; margin-bottom:1.25rem;
+}
+.sidebar .box a{ padding:.15rem 0; }
+
+main{ min-width:0; }
+main > .lesson-title{
+  font-size:1.9rem; margin:.2rem 0 .3rem;
+}
+.lesson-kicker{
+  color:var(--accent); font-weight:700; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em;
+}
+.lesson-lede{
+  color:var(--text-muted); font-size:1.05rem; margin:.5rem 0 1.75rem;
+}
+main h2{
+  font-size:1.4rem; margin:2.4rem 0 .8rem; padding-top:.4rem; border-top:1px solid var(--border);
+}
+main h2:first-of-type{ border-top:none; padding-top:0; }
+main h3{ font-size:1.12rem; margin:1.6rem 0 .6rem; }
+main p{ margin:.7rem 0; }
+main ul, main ol{ padding-left:1.4rem; }
+main li{ margin:.35rem 0; }
+
+.card{
+  background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius);
+  padding:1.1rem 1.3rem; margin:1.1rem 0;
+}
+.card.objectives{ border-left:4px solid var(--primary); }
+.card.tooling{ border-left:4px solid var(--accent); background:var(--accent-light); }
+.card.warn{ border-left:4px solid var(--warn); background:var(--warn-light); }
+.card.note{ border-left:4px solid var(--primary); }
+.card h3{ margin-top:0; }
+.card.tooling h3{ display:flex; align-items:center; gap:.5rem; }
+
+.badge{
+  display:inline-block; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+  padding:.15rem .5rem; border-radius:999px; background:var(--primary-light); color:var(--primary); margin-right:.4rem;
+}
+
+table{ width:100%; border-collapse:collapse; margin:1rem 0; font-size:.92rem; }
+th,td{ border:1px solid var(--border); padding:.5rem .65rem; text-align:left; vertical-align:top; }
+th{ background:var(--bg-elevated); }
+
+blockquote{
+  margin:1rem 0; padding:.6rem 1rem; border-left:4px solid var(--border); color:var(--text-muted); font-style:italic;
+}
+
+/* ---- Code blocks ---- */
+.code-block{
+  background:var(--code-bg); border-radius:var(--radius); margin:1rem 0; overflow:hidden;
+  border:1px solid var(--border);
+}
+.code-block .code-head{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:.4rem .8rem; background:rgba(255,255,255,.04); border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:.72rem; color:#b7b7d0; text-transform:uppercase; letter-spacing:.06em;
+}
+.code-block button.copy-btn{
+  background:transparent; border:1px solid rgba(255,255,255,.25); color:#dcdcf0;
+  border-radius:6px; font-size:.68rem; padding:.15rem .5rem; cursor:pointer;
+}
+.code-block button.copy-btn:hover{ background:rgba(255,255,255,.12); }
+.code-block pre{ margin:0; padding:.9rem 1rem; overflow-x:auto; }
+.code-block code{ color:var(--code-text); font-size:.85rem; line-height:1.55; white-space:pre; }
+.tok-comment{ color:#7f849c; font-style:italic; }
+.tok-string{ color:#a6e3a1; }
+.tok-number{ color:#fab387; }
+.tok-keyword{ color:#89b4fa; font-weight:600; }
+
+code.inline{
+  background:var(--primary-light); color:var(--primary-dark); padding:.1rem .35rem; border-radius:5px; font-size:.88em;
+}
+
+.diagram{
+  background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius);
+  padding:1rem; margin:1.2rem 0; text-align:center; overflow-x:auto;
+}
+.diagram svg{ max-width:100%; height:auto; }
+.diagram figcaption{ margin-top:.5rem; font-size:.8rem; color:var(--text-muted); }
+
+.glossary dt{ font-weight:700; margin-top:.7rem; }
+.glossary dd{ margin:.15rem 0 0; color:var(--text-muted); }
+
+.further-reading li{ margin:.5rem 0; }
+.further-reading .src{ color:var(--text-muted); font-size:.85rem; }
+
+footer.site-footer{
+  max-width:1200px; margin:2rem auto 0; padding:1.5rem 1.25rem 2.5rem;
+  color:var(--text-muted); font-size:.82rem; border-top:1px solid var(--border);
+}
+
+/* ---- Activities-specific ---- */
+.activity{
+  background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius);
+  padding:1.2rem 1.4rem; margin:1.4rem 0;
+}
+.activity > .activity-head{
+  display:flex; justify-content:space-between; align-items:baseline; gap:1rem; flex-wrap:wrap; margin-bottom:.5rem;
+}
+.activity h2{ margin:0; border:none; padding:0; font-size:1.25rem; }
+.meta-pills{ display:flex; gap:.4rem; flex-wrap:wrap; }
+.pill{
+  font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+  padding:.2rem .55rem; border-radius:999px;
+}
+.pill.time{ background:var(--primary-light); color:var(--primary); }
+.pill.mode{ background:var(--accent-light); color:var(--accent); }
+.pill.grade{ background:var(--warn-light); color:var(--warn); }
+
+.quiz-q{
+  border:1px solid var(--border); border-radius:10px; padding:.8rem 1rem; margin:.8rem 0; background:var(--bg);
+}
+.quiz-q .quiz-prompt{ font-weight:600; margin:0 0 .5rem; }
+.quiz-q label{ display:block; padding:.25rem 0; cursor:pointer; }
+.quiz-q input{ margin-right:.5rem; }
+.quiz-q .quiz-explain{ display:none; margin-top:.6rem; padding:.5rem .7rem; border-radius:8px; font-size:.88rem; background:var(--primary-light); }
+.quiz-q.is-correct{ border-color:var(--success); }
+.quiz-q.is-correct .quiz-explain{ background:var(--success-light); }
+.quiz-q.is-incorrect{ border-color:var(--danger); }
+.quiz-q.is-incorrect .quiz-explain{ background:var(--danger-light); }
+.quiz-q.is-unanswered{ border-color:var(--warn); }
+.quiz-actions{ display:flex; align-items:center; gap:1rem; margin-top:.8rem; }
+button.primary-btn{
+  background:var(--primary); color:#fff; border:none; border-radius:8px; padding:.55rem 1.1rem;
+  font-size:.9rem; font-weight:600; cursor:pointer;
+}
+button.primary-btn:hover{ background:var(--primary-dark); }
+.quiz-score{ font-weight:700; }
+
+.checklist label{ display:flex; gap:.6rem; align-items:flex-start; padding:.35rem 0; cursor:pointer; }
+.checklist input{ margin-top:.3rem; }
+
+.rubric-table td:first-child, .rubric-table th:first-child{ width:28%; }
+
+.toc-toggle{ display:none; }
+@media (max-width:900px){
+  .toc-toggle{
+    display:inline-flex; margin-bottom:.8rem; background:var(--bg-elevated); border:1px solid var(--border);
+    border-radius:8px; padding:.4rem .8rem; font-size:.82rem; cursor:pointer; color:var(--text);
+  }
+  .sidebar.collapsed{ display:none; }
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="band">
+    <div class="brand-row">
+      <div class="brand">AI Agentic Engineering<small>Corte 2 &middot; Agents, Multi-Agent Systems &amp; LangGraph</small></div>
+      <div class="view-toggle">
+  <a class="" href="week-10-langgraph-ii-advanced-rag-content.html">Lesson content</a>
+  <a class="active" href="week-10-langgraph-ii-advanced-rag-activities.html">Lab &amp; activities</a>
+</div>
+    </div>
+    <nav class="nav-stepper" aria-label="Lesson navigation">
+      <a class="step prev" href="week-09-langgraph-i-activities.html"><span class="tag">&larr; Previous</span><span class="label">Week 9: LangGraph I</span></a>
+<span class="step current"><span class="tag">You are here</span><span class="label">Week 10: LangGraph II + Advanced RAG</span></span>
+<a class="step next" href="week-12-evaluation-activities.html"><span class="tag">Next &rarr;</span><span class="label">Week 12: Evaluation</span></a>
+    </nav>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="box">
+      <h2>On this page</h2>
+      <ul id="toc-list"></ul>
+    </div>
+    
+    <div class="box">
+  <h2>Runnable code</h2>
+  <ul><li><a href="../agents/week-10-langgraph-ii-advanced-rag/" target="_blank" rel="noopener">Open week 10 agent apps &#8599;</a></li></ul>
+</div>
+    
+  </aside>
+
+  <main>
+    <button class="toc-toggle" id="toc-toggle" type="button">&#9776; On this page</button>
+    <p class="lesson-kicker">Corte 2 &middot; Week 10 of 16</p>
+    <h1 class="lesson-title">Lab &amp; Activities</h1>
+    <p class="lesson-lede">Quiz, a live human-in-the-loop RAG graph, a project-design workshop, an individual lab wiring everything into your own project, peer review, and the full Corte 2 delivery rubric.</p>
+    
+<div class="card note">
+  <h3>How this session runs</h3>
+  <p>
+  2 hours of theory (content page) + 4 hours of hands-on lab (this page). This is the last content week of
+  Corte 2 &mdash; most of the lab time today is deliberately spent turning today's hybrid-search + re-ranking + HITL
+  graph into real progress on your project, since <strong>Week 11 is the exam / project delivery week</strong>.
+  </p>
+</div>
+<div class="card warn">
+  <h3>How this counts toward your grade</h3>
+  <p>
+  Corte 2 = 30% of the course: <strong>25% practical project</strong> (delivered Week 11) + <strong>5% in-class
+  activities</strong> (cumulative across Weeks 6&ndash;11). The rubric for the project is below &mdash; read it now,
+  not the night before it's due.
+  </p>
+</div>
+
+<div class="activity">
+  <div class="activity-head">
+    <h2>Activity 1 &middot; Warm-up Concept Quiz</h2>
+    <div class="meta-pills"><span class="pill time">10 min</span><span class="pill mode">Individual</span><span class="pill grade">Formative</span></div>
+  </div>
+  <form class="quiz" id="quiz1">
+
+    <div class="quiz-q" data-correct="b">
+      <p class="quiz-prompt">1. What does interrupt() rely on to make a pause resumable, even much later?</p>
+      <label><input type="radio" name="q1" value="a"> Nothing; the graph must finish within one process run</label>
+      <label><input type="radio" name="q1" value="b"> The checkpointer, which persisted state up to the pause point</label>
+      <label><input type="radio" name="q1" value="c"> A separate database you must wire in manually every time</label>
+      <div class="quiz-explain">Correct answer: B. The same checkpointer mechanism from Week 9 is what makes resuming possible.</div>
+    </div>
+
+    <div class="quiz-q" data-correct="a">
+      <p class="quiz-prompt">2. Why does pure vector search sometimes miss an obviously relevant chunk containing an exact error code?</p>
+      <label><input type="radio" name="q2" value="a"> Embeddings capture semantic similarity, not exact token matches</label>
+      <label><input type="radio" name="q2" value="b"> Vector search cannot be combined with any other method</label>
+      <label><input type="radio" name="q2" value="c"> ChromaDB does not support numeric content</label>
+      <div class="quiz-explain">Correct answer: A. Hybrid search adds a keyword path specifically to catch these cases.</div>
+    </div>
+
+    <div class="quiz-q" data-correct="c">
+      <p class="quiz-prompt">3. Why re-rank only the top-k retrieved chunks instead of the whole corpus?</p>
+      <label><input type="radio" name="q3" value="a"> Cross-encoders cannot process more than 8 documents ever</label>
+      <label><input type="radio" name="q3" value="b"> Re-ranking the whole corpus would be more accurate but is never worth it</label>
+      <label><input type="radio" name="q3" value="c"> Cross-encoders score each (query, chunk) pair jointly, which is too slow to run over an entire corpus</label>
+      <div class="quiz-explain">Correct answer: C. Retrieval trades precision for speed at corpus scale; re-ranking recovers precision on a small candidate set.</div>
+    </div>
+
+    <div class="quiz-actions">
+      <button class="primary-btn" type="button" onclick="gradeQuiz('quiz1')">Check answers</button>
+      <span class="quiz-score" id="quiz1-score"></span>
+    </div>
+  </form>
+</div>
+
+<div class="activity">
+  <div class="activity-head">
+    <h2>Activity 2 &middot; Instructor-Led Live Coding</h2>
+    <div class="meta-pills"><span class="pill time">40 min</span><span class="pill mode">Whole group</span></div>
+  </div>
+  <p>Run <code class="inline">agents/week-10-langgraph-ii-advanced-rag/langgraph/app.py</code>: a retrieve
+  &rarr; generate &rarr; review graph. Ask a question the sample documents answer well (no interrupt), then one
+  it answers poorly (triggers the review interrupt) &mdash; approve, edit, and reject it live to see all three resume paths.</p>
+</div>
+
+<div class="activity">
+  <div class="activity-head">
+    <h2>Activity 3 &middot; Group Workshop: Where Should Your Project Pause for a Human?</h2>
+    <div class="meta-pills"><span class="pill time">30 min</span><span class="pill mode">Groups of 3&ndash;4</span></div>
+  </div>
+  <p>For your Corte 2 project design:</p>
+  <ol>
+    <li>Identify one decision point that should <strong>not</strong> be fully autonomous (a good <code class="inline">interrupt()</code> candidate) and justify why.</li>
+    <li>Decide what "low confidence" would mean concretely for your system &mdash; a numeric threshold, a missing-context flag, or something else.</li>
+    <li>Decide whether hybrid search is worth the extra complexity for your document set, or whether pure vector search is enough &mdash; justify either answer.</li>
+  </ol>
+</div>
+
+<div class="activity">
+  <div class="activity-head">
+    <h2>Activity 4 &middot; Individual Lab: Wire It Into Your Project</h2>
+    <div class="meta-pills"><span class="pill time">90 min</span><span class="pill mode">Individual</span><span class="pill grade">Graded (activities)</span></div>
+  </div>
+  <ul>
+    <li>Add re-ranking to your project's retrieval step (cross-encoder or LLM-based &mdash; your choice).</li>
+    <li>Add at least one <code class="inline">interrupt()</code> point guarding a consequential or low-confidence action.</li>
+    <li>Test the full resume cycle: trigger the interrupt, resume with an approval and with an edit, confirm both paths work.</li>
+    <li>Commit your progress under <code class="inline">week-10/</code> in your course GitHub repository.</li>
+  </ul>
+</div>
+
+<div class="activity">
+  <div class="activity-head">
+    <h2>Activity 5 &middot; Peer Code Review</h2>
+    <div class="meta-pills"><span class="pill time">20 min</span><span class="pill mode">Pairs</span></div>
+  </div>
+  <div class="checklist">
+    <label><input type="checkbox"> The interrupt point is triggered by a real, checkable condition, not always/never.</label>
+    <label><input type="checkbox"> Resuming with an edit actually changes the final answer, not just the approve path.</label>
+    <label><input type="checkbox"> Re-ranking measurably changes the top result order on at least one test query.</label>
+    <label><input type="checkbox"> The RAG node returns structured state (chunks, draft_answer, confidence), not just a final string.</label>
+  </div>
+</div>
+
+<div class="activity">
+  <div class="activity-head">
+    <h2>Activity 6 &middot; Corte 2 Project: Delivery Checklist &amp; Rubric</h2>
+    <div class="meta-pills"><span class="pill time">Due Week 11</span><span class="pill mode">Individual</span><span class="pill grade">25% + 5%</span></div>
+  </div>
+  <p>
+  <strong>Deliverable:</strong> a multi-agent system that solves a real problem, built with Google ADK or LangGraph,
+  integrating RAG capabilities.
+  </p>
+  <h3>Submission checklist</h3>
+  <div class="checklist">
+    <label><input type="checkbox"> GitHub repository with source code, a clear folder structure, and a <code class="inline">requirements.txt</code>.</label>
+    <label><input type="checkbox"> Documentation including a diagram of the multi-agent system (roles + delegation type per Week 8, or graph shape per Week 9&ndash;10).</label>
+    <label><input type="checkbox"> At least two specialized agents/nodes with a clear, justified division of responsibility.</label>
+    <label><input type="checkbox"> RAG integrated into the flow (Week 4 + Week 10's hybrid search/re-ranking, as appropriate to your project).</label>
+    <label><input type="checkbox"> Ready for a 15-minute live demo in front of the instructor.</label>
+  </div>
+  <h3>Grading rubric</h3>
+  <table class="rubric-table">
+    <thead><tr><th>Criterion</th><th>What's assessed</th></tr></thead>
+    <tbody>
+      <tr><td>Correctness</td><td>The system solves the stated problem; agents produce grounded, accurate results.</td></tr>
+      <tr><td>Multi-agent architecture</td><td>Sensible specialization, a justified delegation/routing mechanism, and a diagram that matches the code.</td></tr>
+      <tr><td>RAG integration</td><td>Retrieval is a real, working part of the flow &mdash; not bolted on separately.</td></tr>
+      <tr><td>Engineering hygiene</td><td>No hardcoded secrets, clean repo structure, working setup instructions.</td></tr>
+      <tr><td>Live demo</td><td>Can explain architectural decisions and handle live questions, including at least one edge case.</td></tr>
+    </tbody>
+  </table>
+  <p>You'll receive individualized written feedback within a week of delivery, followed by a group session on
+  multi-agent design patterns, common errors, and architectural improvement opportunities observed across the
+  class's projects.</p>
+</div>
+
+  </main>
+</div>
+
+<footer class="site-footer">
+  AI Agentic Engineering &mdash; Facultad de Ingenier&iacute;as, Ingenier&iacute;a de Sistemas, Universidad de Santander.
+  Generated teaching material for Week 10: LangGraph II + Advanced RAG. Sources are cited in each &ldquo;Further reading&rdquo; section.
+</footer>
+
+<script>
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function highlightCode(code, lang){
+  var keywordSets = {
+    python: ['def','class','return','import','from','as','if','elif','else','for','while','in','is','not','and','or','try','except','finally','with','lambda','True','False','None','async','await','yield','raise','pass','break','continue','global','self'],
+    bash: ['pip','pip3','python','python3','export','source','cd','echo','curl','npm','agy','adk','sudo','irm','iex','mkdir','ls','venv','activate','uvicorn'],
+    json: ['true','false','null']
+  };
+  var kws = keywordSets[lang] || keywordSets.python;
+  var kwPattern = kws.map(function(k){ return k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }).join('|');
+  var master = new RegExp(
+    '(#.*$)' + '|' +
+    '("""[\\s\\S]*?"""|\'\'\'[\\s\\S]*?\'\'\')' + '|' +
+    '("(?:[^"\\\\]|\\\\.)*"|\'(?:[^\'\\\\]|\\\\.)*\')' + '|' +
+    '(\\b\\d+(?:\\.\\d+)?\\b)' + '|' +
+    '(\\b(?:' + kwPattern + ')\\b)',
+    'gm'
+  );
+  var out = '', last = 0, m;
+  while ((m = master.exec(code)) !== null){
+    out += escapeHtml(code.slice(last, m.index));
+    if (m[1] !== undefined) out += '<span class="tok-comment">' + escapeHtml(m[1]) + '</span>';
+    else if (m[2] !== undefined) out += '<span class="tok-string">' + escapeHtml(m[2]) + '</span>';
+    else if (m[3] !== undefined) out += '<span class="tok-string">' + escapeHtml(m[3]) + '</span>';
+    else if (m[4] !== undefined) out += '<span class="tok-number">' + escapeHtml(m[4]) + '</span>';
+    else if (m[5] !== undefined) out += '<span class="tok-keyword">' + escapeHtml(m[5]) + '</span>';
+    last = master.lastIndex;
+    if (m[0] === '') master.lastIndex++;
+  }
+  out += escapeHtml(code.slice(last));
+  return out;
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('pre code[data-lang]').forEach(function(block){
+    var lang = block.getAttribute('data-lang');
+    block.innerHTML = highlightCode(block.textContent, lang);
+  });
+
+  document.querySelectorAll('.code-block').forEach(function(cb){
+    var btn = cb.querySelector('.copy-btn');
+    var code = cb.querySelector('code');
+    if(!btn || !code) return;
+    btn.addEventListener('click', function(){
+      navigator.clipboard.writeText(code.textContent).then(function(){
+        var orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(function(){ btn.textContent = orig; }, 1500);
+      });
+    });
+  });
+
+  var tocList = document.getElementById('toc-list');
+  if (tocList){
+    var headers = document.querySelectorAll('main h2, main h3');
+    headers.forEach(function(h, i){
+      if(!h.id){
+        h.id = 'sec-' + i + '-' + h.textContent.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+      }
+      var li = document.createElement('li');
+      if (h.tagName === 'H3') li.className = 'toc-sub';
+      var a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.textContent = h.textContent;
+      li.appendChild(a);
+      tocList.appendChild(li);
+    });
+  }
+
+  var tocToggle = document.getElementById('toc-toggle');
+  if (tocToggle){
+    tocToggle.addEventListener('click', function(){
+      document.getElementById('sidebar').classList.toggle('collapsed');
+    });
+  }
+});
+
+function gradeQuiz(formId){
+  var form = document.getElementById(formId);
+  if(!form) return;
+  var questions = form.querySelectorAll('.quiz-q');
+  var score = 0;
+  questions.forEach(function(q){
+    var correct = q.getAttribute('data-correct');
+    var checked = q.querySelector('input:checked');
+    q.classList.remove('is-correct','is-incorrect','is-unanswered');
+    if(!checked){
+      q.classList.add('is-unanswered');
+    } else if (checked.value === correct){
+      q.classList.add('is-correct');
+      score++;
+    } else {
+      q.classList.add('is-incorrect');
+    }
+    var explain = q.querySelector('.quiz-explain');
+    if (explain) explain.style.display = 'block';
+  });
+  var scoreEl = document.getElementById(formId + '-score');
+  if (scoreEl) scoreEl.textContent = 'Score: ' + score + ' / ' + questions.length;
+  var summary = document.getElementById(formId + '-summary');
+  if (summary) summary.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+</script>
+</body>
+</html>

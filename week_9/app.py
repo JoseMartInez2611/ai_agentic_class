@@ -29,7 +29,13 @@ class PlannerState(TypedDict):
 
 
 class RouteDecision(BaseModel):
-    route: Literal["research_node", "planner_node", "both_node"]
+    route: Literal["research_node", "planner_node", "both_node", "clarify_node"]
+
+
+def route_after_classify(state: PlannerState) -> str:
+    """Pure routing function: just forwards the route classify_node already decided. No LLM call,
+    so it is unit-testable with plain asserts (see test_routing.py)."""
+    return state["route"]
 
 
 def build_graph():
@@ -39,13 +45,19 @@ def build_graph():
     def classify_node(state: PlannerState) -> dict:
         decision = router_llm.invoke(
             "Classify the user's question about a course. Return route='research_node' if it only "
-            "asks what a given week covers, 'planner_node' if it only asks about study hours, or "
-            "'both_node' if it asks about both.\n\nQuestion: " + state["question"]
+            "asks what a given week covers, 'planner_node' if it only asks about study hours, "
+            "'both_node' if it asks about both, or 'clarify_node' if the question is too vague or "
+            "ambiguous to tell which of the other three it means.\n\nQuestion: " + state["question"]
         )
         return {"route": decision.route}
 
-    def route_after_classify(state: PlannerState) -> str:
-        return state["route"]
+    def clarify_node(state: PlannerState) -> dict:
+        return {
+            "result": (
+                "Could you clarify whether you're asking about what a week covers, how many study "
+                "hours to budget, or both?"
+            )
+        }
 
     def _extract_week(question: str) -> int | None:
         m = re.search(r"week\s*(\d+)", question, re.IGNORECASE)
@@ -82,13 +94,14 @@ def build_graph():
     builder = StateGraph(PlannerState)
     for name, fn in [
         ("classify", classify_node), ("research_node", research_node),
-        ("planner_node", planner_node), ("both_node", both_node), ("respond", respond_node),
+        ("planner_node", planner_node), ("both_node", both_node),
+        ("clarify_node", clarify_node), ("respond", respond_node),
     ]:
         builder.add_node(name, fn)
 
     builder.add_edge(START, "classify")
     builder.add_conditional_edges("classify", route_after_classify)
-    for worker in ["research_node", "planner_node", "both_node"]:
+    for worker in ["research_node", "planner_node", "both_node", "clarify_node"]:
         builder.add_edge(worker, "respond")
     builder.add_edge("respond", END)
 

@@ -66,9 +66,20 @@ def reciprocal_rank_fusion(list_a: list[str], list_b: list[str], k: int = 60) ->
     return [item for item, _ in sorted(scores.items(), key=lambda x: x[1], reverse=True)]
 
 
+def _as_text(content) -> str:
+    """ChatGoogleGenerativeAI's .content is sometimes a plain str and sometimes a block list
+    like [{'type': 'text', 'text': '...', 'extras': {...}}] -- normalize to a plain string."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return " ".join(block.get("text", "") for block in content if isinstance(block, dict))
+    return str(content)
+
+
 class RAGState(TypedDict):
     question: str
     chunks: list[str]
+    chunks_before_rerank: list[str]
     draft_answer: str
     confidence: float
     final_answer: str
@@ -100,10 +111,12 @@ def build_graph():
             "Reply with only the passage numbers, most relevant first, comma-separated.\n\n"
             + "\n".join(f"{i}: {c}" for i, c in enumerate(merged))
         )
-        order = llm.invoke(rerank_prompt).content
+        order = _as_text(llm.invoke(rerank_prompt).content)
         indices = [int(n) for n in re.findall(r"\d+", order) if int(n) < len(merged)]
         ranked = [merged[i] for i in indices] or merged
-        return {"chunks": ranked[:3]}
+        # Kept alongside the re-ranked result so callers can verify re-ranking actually
+        # changed the order, not just silently passed the fused list through unchanged.
+        return {"chunks": ranked[:3], "chunks_before_rerank": merged[:3]}
 
     def generate_node(state: RAGState) -> dict:
         context = "\n\n---\n\n".join(state["chunks"])
@@ -111,7 +124,7 @@ def build_graph():
             f"Answer using ONLY this context. If unsure, say 'I don't have enough information'.\n\n"
             f"Context:\n{context}\n\nQuestion: {state['question']}"
         )
-        answer = llm.invoke(prompt).content
+        answer = _as_text(llm.invoke(prompt).content)
         confidence = 0.3 if "don't have enough information" in answer.lower() else 0.9
         return {"draft_answer": answer, "confidence": confidence}
 
